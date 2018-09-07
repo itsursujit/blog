@@ -1,0 +1,16 @@
+{
+    "name": "Gateway",
+    "alias": "gateway",
+    "description": "",
+    "keywords": [],
+    "active": 1,
+    "order": 0,
+    "providers": [
+        "Modules\\Gateway\\Providers\\GatewayServiceProvider"
+    ],
+    "aliases": {},
+    "files": [
+        "start.php"
+    ],
+    "requires": []
+}
