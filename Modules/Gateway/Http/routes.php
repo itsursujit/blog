@@ -1,6 +1,9 @@
 <?php
-
-Route::group(['middleware' => 'web', 'prefix' => 'gateway', 'namespace' => 'Modules\Gateway\Http\Controllers'], function()
+Route::group(['middleware' => 'gateway', 'prefix' => 'api'], function()
 {
-    Route::get('/', 'GatewayController@index');
+    Route::group(['prefix' => 'gateway', 'namespace' => 'Modules\Gateway\Http\Controllers'], function()
+    {
+        Route::get('/{slug?}', 'GatewayController@index');
+    });
 });
+
