@@ -16,8 +16,10 @@ class CreateServicesModulesTable extends Migration
     {
         Schema::create('services_modules', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('title')->nullable()->index('idx_1');
+            $table->string('name')->nullable()->index('idx_1');
+            $table->string('alias')->nullable()->index('idx_2');
             $table->string('type')->nullable();
+            $table->text('providers')->nullable();
             $table->string('proxies')->nullable();
             $table->longText('routes')->nullable();
             $table->integer('status')->nullable();

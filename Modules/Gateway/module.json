@@ -2,9 +2,13 @@
     "name": "Gateway",
     "alias": "gateway",
     "description": "",
+    "type": "gateway",
     "keywords": [],
     "active": 1,
     "order": 0,
+    "proxies": [
+        "https://blog.test"
+    ],
     "providers": [
         "Modules\\Gateway\\Providers\\GatewayServiceProvider"
     ],

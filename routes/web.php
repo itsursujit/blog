@@ -13,4 +13,8 @@
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->middleware('gateway');
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');

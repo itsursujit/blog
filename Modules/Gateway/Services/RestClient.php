@@ -1,4 +1,7 @@
 <?php namespace Modules\Gateway\Services;
+use GuzzleHttp\Client;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Modules\Gateway\Contracts\ActionContract;
 
 /**
@@ -11,7 +14,7 @@ use Modules\Gateway\Contracts\ActionContract;
  * @package    Modules\Gateway\Services
  * @subpackage
  * @author     Sujit Baniya <sujit@intergo.com.cy>
- * @copyright  2018 Kyvio.com. All rights reserved.
+ * @copyright  2018 SMS.to. All rights reserved.
  */
 class RestClient
 {
@@ -19,11 +22,6 @@ class RestClient
      * @var Client
      */
     protected $client;
-
-    /**
-     * @var ServiceRegistryContract
-     */
-    protected $services;
 
     /**
      * @var array
@@ -36,18 +34,16 @@ class RestClient
     /**
      * @var int
      */
-    const USER_ID_ANONYMOUS = -1;
+    public const USER_ID_ANONYMOUS = -1;
 
     /**
      * RestClient constructor.
      * @param Client $client
-     * @param ServiceRegistryContract $services
      * @param Request $request
      */
-    public function __construct(Client $client, ServiceRegistryContract $services, Request $request)
+    public function __construct(Client $client, Request $request)
     {
         $this->client = $client;
-        $this->services = $services;
         $this->injectHeaders($request);
     }
 
@@ -232,8 +228,9 @@ class RestClient
 
     /**
      * @param ActionContract $action
-     * @param array $parametersJar
-     * @return PsrResponse
+     * @param array          $parametersJar
+     *
+     * @return
      * @throws UnableToExecuteRequestException
      */
     public function syncRequest(ActionContract $action, $parametersJar)

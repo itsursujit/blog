@@ -31,14 +31,14 @@ class GatewayServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $router = $this->app['router'];
+        $router->pushMiddlewareToGroup('gateway', HelperMiddleware::class);
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
         $this->registerRoutes();
         $this->registerFactories();
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
-        $router = $this->app['router'];
-        $router->aliasMiddleware('gateway', HelperMiddleware::class);
         //also you can register your route level middlewares using the router
         //$router->pushMiddlewareToGroup('gateway', HelperMiddleware::class);
     }
@@ -139,12 +139,12 @@ class GatewayServiceProvider extends ServiceProvider
     protected function registerRoutes()
     {
         $routes = [];
-        Module::toCollection()->each(function ($module) use (&$routes) {
+        /*Module::toCollection()->each(function ($module) use (&$routes) {
             if($module->name != 'Gateway')
             {
                 $routes[$module->getLowerName()] = $this->getModuleRoutes($module->name);
             }
-        });
+        });*/
 
         /*$this->app->singleton(RouteRegistry::class, function() use($routes) {
             return RouteRegistry::initFromObjectArray($routes);

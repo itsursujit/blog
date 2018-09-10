@@ -54,6 +54,10 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'application_type' => 'app', // gateway | app | auth | service
+
+    'gateway_proxies' => json_decode(file_get_contents(storage_path() . '/app/gateway-routes.json'), true)['proxies'], // array or false
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
@@ -159,7 +163,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-
+        \App\Providers\ModuleServiceProvider::class,
     ],
 
     /*

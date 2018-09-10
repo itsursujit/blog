@@ -10,7 +10,6 @@
         "fideloper/proxy": "^4.0",
         "guzzlehttp/guzzle": "^6.3",
         "laravel/framework": "5.7.*",
-        "nwidart/laravel-modules": "^3.3",
         "predis/predis": "^1.1"
     },
     "require-dev": {

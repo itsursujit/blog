@@ -2,9 +2,13 @@
     "name": "SMS",
     "alias": "sms",
     "description": "",
+    "type": "service",
     "keywords": [],
     "active": 1,
     "order": 0,
+    "proxies": [
+        "https://blog.test"
+    ],
     "providers": [
         "Modules\\SMS\\Providers\\SMSServiceProvider"
     ],

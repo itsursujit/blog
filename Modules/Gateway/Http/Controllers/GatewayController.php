@@ -4,6 +4,7 @@ namespace Modules\Gateway\Http\Controllers;
 
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Route;
 use Modules\Gateway\Contracts\PresenterContract;
 use Modules\Gateway\Exceptions\DataFormatException;
 use Modules\Gateway\Exceptions\NotImplementedException;
@@ -40,9 +41,20 @@ class GatewayController extends Controller
      */
     public function __construct(Request $request)
     {
-        $this->middleware([
-            HelperMiddleware::class
-        ]);
+        /*$routes = collect(Route::getRoutes())->filter(function ($item) {
+            return isset($item->action['namespace']) && starts_with($item->action['namespace'], "Modules\\Gateway");
+        })->values()->all();
+        $routesJson = [];
+        foreach($routes as $route)
+        {
+            $routesJson[] = [
+                'uri' => $route->uri,
+                'method' => $route->methods[0],
+                'parameters' => json_encode($route->parameterNames)
+            ];
+        }*/
+
+        return;
         if (empty($request->getRoute())) throw new DataFormatException('Unable to find original URI pattern');
 
         $this->config = $request

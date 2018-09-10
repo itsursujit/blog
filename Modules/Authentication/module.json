@@ -2,9 +2,13 @@
     "name": "Authentication",
     "alias": "authentication",
     "description": "",
+    "type": "authentication",
     "keywords": [],
     "active": 1,
     "order": 0,
+    "proxies": [
+        "https://blog.test"
+    ],
     "providers": [
         "Modules\\Authentication\\Providers\\AuthenticationServiceProvider"
     ],
