@@ -15,7 +15,6 @@ class GatewayMiddleware
      * @param  \Closure                 $next
      *
      * @return mixed
-     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function handle($request, Closure $next)
     {
