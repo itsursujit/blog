@@ -31,8 +31,8 @@ class GatewayServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $router = $this->app['router'];
-        $router->pushMiddlewareToGroup('gateway', HelperMiddleware::class);
+        /*$router = $this->app['router'];
+        $router->pushMiddlewareToGroup('gateway', HelperMiddleware::class);*/
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();

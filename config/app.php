@@ -56,7 +56,7 @@ return [
 
     'application_type' => 'app', // gateway | app | auth | service
 
-    'gateway_proxies' => json_decode(file_get_contents(storage_path() . '/app/gateway-routes.json'), true)['proxies'], // array or false
+    'gateway_proxies' => false, //json_decode(file_get_contents(storage_path() . '/app/gateway-routes.json'), true)['proxies'], // array or false
 
     /*
     |--------------------------------------------------------------------------

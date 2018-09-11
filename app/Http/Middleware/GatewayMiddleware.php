@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Service\Curl;
 use Closure;
+use Illuminate\Support\Facades\Response;
 
 class GatewayMiddleware
 {
@@ -24,22 +26,13 @@ class GatewayMiddleware
         }
         $data = $request->all();
         $method = $request->getMethod();
-        $gatewayUrl = $gatewayProxies[array_rand($gatewayProxies)];
+        $uri = $request->getRequestUri();
+        $gatewayUrl = $gatewayProxies[array_rand($gatewayProxies)]  . $uri;
         $queryString = $request->getQueryString();
-        $gatewayUrl .= '?' . $queryString;
+        $gatewayUrl .= empty($queryString) ?'':'?' . $queryString;
         $headers = $request->headers->all();
-        $client = new \GuzzleHttp\Client([
-            'verify' => false,
-            'timeout' => 5, // Response timeout
-            'connect_timeout' => 5, // Connection timeout
-            'peer' => false
-        ]);
-        $response = $client->request($method, $gatewayUrl, [
-            'json' => $data,
-            'headers' => $headers,
-        ]);
 
-        $response = $response->getBody()->getContents();
-        dd($response);
+        $response = Curl::request($gatewayUrl, $method, $data);
+        return Response::make($response);
     }
 }
