@@ -18,8 +18,8 @@ class GatewayMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $gatewayProxies = config('app.gateway_proxies');
-        if(!$gatewayProxies)
+        $gatewayProxies = config('sms.gateway_proxies');
+        if(!$gatewayProxies || config('sms.application_type') !== 'app')
         {
             return $next($request);
         }
@@ -30,7 +30,6 @@ class GatewayMiddleware
         $queryString = $request->getQueryString();
         $gatewayUrl .= empty($queryString) ?'':'?' . $queryString;
         $headers = $request->headers->all();
-
         $response = Curl::request($gatewayUrl, $method, $data);
         return Response::make($response);
     }

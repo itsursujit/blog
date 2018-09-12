@@ -27,20 +27,32 @@ class ModuleServiceProvider extends ServiceProvider
     {
         $modulesPath = base_path() . '/Modules';
         $folders = glob($modulesPath . '/*');
-        $modules = DB::table('services_modules')->where('status', 1)->pluck('providers', 'name');
+        $modules = DB::table('services_modules')->where('status', 1)->pluck('providers', 'name')->toArray();
         foreach($folders as $folder)
         {
-            foreach ($modules as $module => $providers)
+            if(!empty($modules))
             {
-                if(basename($folder) === $module)
+                foreach ($modules as $module => $providers)
                 {
-                    $providers = json_decode($providers, true);
-                    foreach($providers as $provider)
+                    if(basename($folder) === $module)
                     {
-                        $this->app->register($provider);
+                        $providers = json_decode($providers, true);
+                        foreach($providers as $provider)
+                        {
+                            $this->app->register($provider);
+                        }
+                        require $folder . '/start.php';
                     }
-                    require $folder . '/start.php';
                 }
+            }
+            else
+            {
+                $providers = json_decode(file_get_contents($folder . '/module.json'), true)['providers'];
+                foreach($providers as $provider)
+                {
+                    $this->app->register($provider);
+                }
+                require $folder . '/start.php';
             }
         }
     }

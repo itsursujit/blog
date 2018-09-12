@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\GatewayMiddleware;
+use App\Http\Middleware\ServicesMiddleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -21,6 +22,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         \App\Http\Middleware\TrustProxies::class,
         GatewayMiddleware::class,
+        ServicesMiddleware::class,
     ];
 
     /**

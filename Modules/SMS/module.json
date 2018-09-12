@@ -7,7 +7,7 @@
     "active": 1,
     "order": 0,
     "proxies": [
-        "https://sms.test"
+        "https://smsm.test"
     ],
     "providers": [
         "Modules\\SMS\\Providers\\SMSServiceProvider"
