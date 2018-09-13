@@ -1,5 +1,7 @@
 <?php
 namespace App\Service;
+use Illuminate\Support\Facades\Response;
+
 /**
  * File Curl
  *
@@ -40,7 +42,7 @@ class Curl {
                 break;
         }
         $response = curl_exec($curl);
-
+        return Response::make($response);
         /* Check for 404 (file not found). */
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         // Check the HTTP Status code
