@@ -1,5 +1,7 @@
 <?php
 
+use Dingo\Api\Dispatcher;
+use Dingo\Api\Routing\Router;
 use Illuminate\Http\Request;
 
 /*
@@ -12,3 +14,10 @@ use Illuminate\Http\Request;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+$api = app(Router::class);
+$dispatcher = app(Dispatcher::class);
+$api->version('v1'/*, ['middleware' => 'api.auth']*/, function ($api) use($dispatcher) {
+    $api->get('/test', function() {
+        return "Hello world";
+    });
+});

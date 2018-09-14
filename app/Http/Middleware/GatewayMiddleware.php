@@ -3,9 +3,11 @@
 namespace App\Http\Middleware;
 
 use App\Service\Curl;
+use App\Service\MultiCurl;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use Dingo\Api\Dispatcher;
 
 class GatewayMiddleware
 {
@@ -27,6 +29,62 @@ class GatewayMiddleware
         $queryString = $request->getQueryString();
         $headers = $request->headers->all();
         $url = url();
+        $getUrl = 'https://kantipur.ekantipur.com';
+        $startTime = microtime(true);
+        $c = new Curl();
+        $c->get($getUrl);
+        $response = $c->exec();
+        /*if ($response->hasError()) {
+            //Fail
+            var_dump($response->getError());
+        } else {
+            //Success
+            var_dump($response->getBody());
+        }*/
+
+        //Reuse $c
+        $c->get($getUrl);
+        $response = $c->exec();
+        /*if ($response->hasError()) {
+            //Fail
+            var_dump($response->getError());
+        } else {
+            //Success
+            var_dump($response->getBody());
+        }*/
+        $endTime = microtime(true);
+        echo $endTime - $startTime . "\n";
+//Multi http request
+        $startTime = microtime(true);
+        $getUrl = 'https://kantipur.ekantipur.com';
+        $c2 = new Curl();
+        $c2->get($getUrl);
+
+        $c3 = new Curl();
+        $c3->get($getUrl);
+
+        $mc = new MultiCurl();
+
+        $mc->addCurls([$c2, $c3]);
+        $allSuccess = $mc->exec();
+        /*if ($allSuccess) {
+            //All success
+            var_dump($c2->getResponse()->getBody(), $c3->getResponse()->getBody());
+        } else {
+            //Some curls failed
+            var_dump($c2->getResponse()->getError(), $c3->getResponse()->getError());
+        }*/
+        $endTime = microtime(true);
+        echo $endTime - $startTime . "\n";
+        $startTime = microtime(true);
+        /*if ($allSuccess) {
+            //All success
+            var_dump($c4->getResponse()->getBody(), $c5->getResponse()->getBody());
+        } else {
+            //Some curls failed
+            var_dump($c4->getResponse()->getError(), $c5->getResponse()->getError());
+        }*/
+        dd(1);
         switch($applicationType)
         {
             case 'app':

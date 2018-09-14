@@ -9,7 +9,7 @@
 return [
     'application_type' => 'app', // gateway | app | auth | service
 
-    'gateway_proxies' => [
+    'gateway_proxies' => false/*[
         'https://gateway.test'
-    ],
+    ]*/,
 ];

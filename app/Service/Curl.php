@@ -1,6 +1,5 @@
 <?php
 namespace App\Service;
-use Illuminate\Support\Facades\Response;
 
 /**
  * File Curl
@@ -14,118 +13,245 @@ use Illuminate\Support\Facades\Response;
  * @author     Sujit Baniya <sujit@intergo.com.cy>
  * @copyright  2018 intergo.com.cy. All rights reserved.
  */
-class Curl {
+class Curl
+{
 
-    public static function request($url, $method, $data)
+    protected $id;
+    protected $handle;
+    protected $meetPhp55 = false;
+    /**
+     * @var Response
+     */
+    protected $response;
+    protected $multi = false;
+    protected $options = [];
+    protected static $defaultOptions = [
+        //bool
+        CURLOPT_HEADER         => true,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_RETURNTRANSFER => true,
+        //int
+        CURLOPT_MAXREDIRS      => 3,
+        CURLOPT_TIMEOUT        => 6,
+        CURLOPT_CONNECTTIMEOUT => 3,
+        //string
+        CURLOPT_USERAGENT      => 'Multi-cURL client v1.5.0',
+    ];
+    public function __construct($id = null, array $options = [])
     {
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+        $this->id = $id;
+        $this->options = $options + self::$defaultOptions;
+        $this->meetPhp55 = version_compare(PHP_VERSION, '5.5.0', '>=');
+    }
 
-        switch (strtolower($method)) {
-            case "get":
-                curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "GET");
-                break;
-            case "post":
-                curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-                break;
-            case "put":
-                curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
-                break;
-            case "delete":
-                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-                curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-                break;
+    protected function init()
+    {
+        if ($this->meetPhp55) {
+            if ($this->handle === null) {
+                $this->handle = curl_init();
+            } else {
+                curl_reset($this->handle); //Reuse cUrl handle: since 5.5.0
+            }
+        } else {
+            if ($this->handle !== null) {
+                curl_close($this->handle);
+            }
+            $this->handle = curl_init();
         }
-        $response = curl_exec($curl);
-        return Response::make($response);
-        /* Check for 404 (file not found). */
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        // Check the HTTP Status code
-        switch ($httpCode) {
-            case 200:
-                $error_status = "200: Success";
-                return $response;
+        curl_setopt_array($this->handle, $this->options);
+    }
+
+    public function getId()
+    {
+        return $this->id;
+    }
+    public function get($url, $params = null, array $headers = [])
+    {
+        $this->init();
+        if (is_string($params) || is_array($params)) {
+            is_array($params) AND $params = http_build_query($params);
+            $url = rtrim($url, '?');
+            if (strpos($url, '?') !== false) {
+                $url .= '&' . $params;
+            } else {
+                $url .= '?' . $params;
+            }
+        }
+        curl_setopt_array($this->handle, [CURLOPT_URL => $url, CURLOPT_HTTPGET => true]);
+        if (!empty($headers)) {
+            curl_setopt($this->handle, CURLOPT_HTTPHEADER, $headers);
+        }
+    }
+
+    public function post($url, $params = null, array $headers = [])
+    {
+        $this->init();
+        curl_setopt_array($this->handle, [CURLOPT_URL => $url, CURLOPT_POST => true]);
+        //CURLFile support
+        if (is_array($params)) {
+            $hasUploadFile = false;
+            if ($this->meetPhp55) {//CURLFile: since 5.5.0
+                foreach ($params as $k => $v) {
+                    if ($v instanceof \CURLFile) {
+                        $hasUploadFile = true;
+                        break;
+                    }
+                }
+            }
+            $hasUploadFile OR $params = http_build_query($params);
+        }
+        //$params: array => multipart/form-data, string => application/x-www-form-urlencoded
+        if (!empty($params)) {
+            curl_setopt($this->handle, CURLOPT_POSTFIELDS, $params);
+        }
+        if (!empty($headers)) {
+            curl_setopt($this->handle, CURLOPT_HTTPHEADER, $headers);
+        }
+    }
+
+    public function put($url, $params = null, array $headers = [])
+    {
+        $this->init();
+        curl_setopt_array($this->handle, [CURLOPT_URL => $url, CURLOPT_POST => true, CURLOPT_CUSTOMREQUEST => 'PUT']);
+        //CURLFile support
+        if (is_array($params)) {
+            $hasUploadFile = false;
+            if ($this->meetPhp55) {//CURLFile: since 5.5.0
+                foreach ($params as $k => $v) {
+                    if ($v instanceof \CURLFile) {
+                        $hasUploadFile = true;
+                        break;
+                    }
+                }
+            }
+            $hasUploadFile OR $params = http_build_query($params);
+        }
+        //$params: array => multipart/form-data, string => application/x-www-form-urlencoded
+        if (!empty($params)) {
+            curl_setopt($this->handle, CURLOPT_POSTFIELDS, $params);
+        }
+        if (!empty($headers)) {
+            curl_setopt($this->handle, CURLOPT_HTTPHEADER, $headers);
+        }
+    }
+
+    public function delete($url, $params = null, array $headers = [])
+    {
+        $this->init();
+        curl_setopt_array($this->handle, [CURLOPT_URL => $url, CURLOPT_POST => true, CURLOPT_CUSTOMREQUEST => 'DELETE']);
+        //CURLFile support
+        if (is_array($params)) {
+            $hasUploadFile = false;
+            if ($this->meetPhp55) {//CURLFile: since 5.5.0
+                foreach ($params as $k => $v) {
+                    if ($v instanceof \CURLFile) {
+                        $hasUploadFile = true;
+                        break;
+                    }
+                }
+            }
+            $hasUploadFile OR $params = http_build_query($params);
+        }
+        //$params: array => multipart/form-data, string => application/x-www-form-urlencoded
+        if (!empty($params)) {
+            curl_setopt($this->handle, CURLOPT_POSTFIELDS, $params);
+        }
+        if (!empty($headers)) {
+            curl_setopt($this->handle, CURLOPT_HTTPHEADER, $headers);
+        }
+    }
+
+    public function request($method, $url, $params = null, array $headers = [])
+    {
+        $this->init();
+        $post = false;
+        switch (strtolower($method))
+        {
+            case 'get':
+                curl_setopt_array($this->handle, [CURLOPT_URL => $url, CURLOPT_HTTPGET => true]);
                 break;
-            case 404:
-                $error_status = "404: API Not found";
-                break;
-            case 500:
-                $error_status = "500: servers replied with an error.";
-                break;
-            case 502:
-                $error_status = "502: servers may be down or being upgraded. Hopefully they'll be OK soon!";
-                break;
-            case 503:
-                $error_status = "503: service unavailable. Hopefully they'll be OK soon!";
+            case 'post':
+            case 'delete':
+            case 'put':
+                $post = true;
+                curl_setopt_array($this->handle, [CURLOPT_URL => $url, CURLOPT_POST => true]);
                 break;
             default:
-                $error_status = "Undocumented error: " . $httpCode . " : " . curl_error($curl);
+                curl_setopt_array($this->handle, [CURLOPT_URL => $url, CURLOPT_HTTPGET => true]);
                 break;
+
         }
-        curl_close($curl);
-        return $error_status;
+
+        //CURLFile support
+        if (is_array($params)) {
+            $hasUploadFile = false;
+            if ($this->meetPhp55) {//CURLFile: since 5.5.0
+                foreach ($params as $k => $v) {
+                    if ($v instanceof \CURLFile) {
+                        $hasUploadFile = true;
+                        break;
+                    }
+                }
+            }
+            $hasUploadFile OR $params = http_build_query($params);
+        }
+        //$params: array => multipart/form-data, string => application/x-www-form-urlencoded
+        if (!empty($params) && $post) {
+            curl_setopt($this->handle, CURLOPT_POSTFIELDS, $params);
+        }
+        if (!empty($headers)) {
+            curl_setopt($this->handle, CURLOPT_HTTPHEADER, $headers);
+        }
     }
 
-    public static function get($url){
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $result = curl_exec($ch);
-        return $result;
+    public function exec()
+    {
+        if ($this->multi) {
+            $responseStr = curl_multi_getcontent($this->handle);
+        } else {
+            $responseStr = curl_exec($this->handle);
+        }
+        $errno = curl_errno($this->handle);
+        $errstr = curl_error($this->handle);//Fix: curl_errno() always return 0 when fail
+        $url = curl_getinfo($this->handle, CURLINFO_EFFECTIVE_URL);
+        $code = curl_getinfo($this->handle, CURLINFO_HTTP_CODE);
+        $headerSize = curl_getinfo($this->handle, CURLINFO_HEADER_SIZE);
+        $this->response = Response::make($url, $code, $responseStr, $headerSize, [$errno, $errstr]);
+        return $this->response;
+    }
+    public function setMulti($isMulti)
+    {
+        $this->multi = (bool)$isMulti;
     }
 
-    public static function post($url, $data_string){
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_FAILONERROR, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                'Content-Type: application/json',
-                'Content-Length: ' . strlen($data_string))
-        );
-
-        $result = curl_exec($ch);
-        return $result;
+    /**
+     * @param $filename
+     *
+     * @return bool|int
+     */
+    public function responseToFile($filename)
+    {
+        $folder = dirname($filename);
+        if (!file_exists($folder)) {
+            if (!mkdir($folder, 0777, true) && !is_dir($folder))
+            {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $folder));
+            }
+        }
+        return file_put_contents($filename, $this->getResponse()->getBody());
     }
-
-    public static function put($url, $data_string){
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-        curl_setopt($ch, CURLOPT_FAILONERROR, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                'Content-Type: application/json',
-                'Content-Length: ' . strlen($data_string))
-        );
-
-        $result = curl_exec($ch);
-        return $result;
+    public function getResponse()
+    {
+        return $this->response;
     }
-
-    public static function delete($url, $data_string){
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
-        curl_setopt($ch, CURLOPT_FAILONERROR, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                'Content-Type: application/json',
-                'Content-Length: ' . strlen($data_string))
-        );
-
-        $result = curl_exec($ch);
-        return $result;
+    public function getHandle()
+    {
+        return $this->handle;
+    }
+    public function __destruct()
+    {
+        curl_close($this->handle);
     }
 
 }
