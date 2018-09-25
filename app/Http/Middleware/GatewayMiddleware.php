@@ -22,17 +22,60 @@ class GatewayMiddleware
     public function handle($request, Closure $next)
     {
         $gatewayProxies = config('sms.gateway_proxies');
-        $applicationType = config('sms.application_type');
+        if(\request('type'))
+        {
+            $applicationType = \request('type');
+        }
+        else
+        {
+            $applicationType = config('sms.application_type');
+        }
         $data = $request->all();
         $method = $request->getMethod();
         $uri = $request->getRequestUri();
         $queryString = $request->getQueryString();
-        $headers = $request->headers->all();
-        $url = url();
+        $get_first = function($x){
+            return $x[0];
+        };
+        $headers = array_map($get_first, $request->headers->all());
+
+        switch($applicationType)
+        {
+            case 'app':
+                if(!$gatewayProxies)
+                {
+                    return $next($request);
+                }
+                $url = $gatewayProxies[array_rand($gatewayProxies)]  . $uri;
+                break;
+            case 'gateway':
+                $service = $this->getRequestServiceProxies($request);
+                $serviceProxy = $service['proxies'];
+                if(empty($serviceProxy))
+                {
+                    return $next($request);
+                }
+                $url = $serviceProxy[array_rand($serviceProxy)]  . $uri;
+                break;
+            case 'service':
+                return $next($request);
+                break;
+            case 'auth':
+                return $next($request);
+                break;
+            default:
+                return abort(404, 'Page Not found');
+                break;
+        }
+        $url .= empty($queryString) ?'':'?' . $queryString;
+        $curl = new Curl();
+        $response = $curl->request($url, $method, $data, $headers)->exec();
+        return $response;
+
         $getUrl = 'https://kantipur.ekantipur.com';
         $startTime = microtime(true);
         $c = new Curl();
-        $c->get($getUrl);
+        $c->get($getUrl, null,$headers);
         $response = $c->exec();
         /*if ($response->hasError()) {
             //Fail
@@ -85,38 +128,6 @@ class GatewayMiddleware
             var_dump($c4->getResponse()->getError(), $c5->getResponse()->getError());
         }*/
         dd(1);
-        switch($applicationType)
-        {
-            case 'app':
-                if(!$gatewayProxies)
-                {
-                    return $next($request);
-                }
-                $url = $gatewayProxies[array_rand($gatewayProxies)]  . $uri;
-                break;
-            case 'gateway':
-                $service = $this->getRequestServiceProxies($request);
-                $serviceProxy = $service['proxies'];
-                if(empty($serviceProxy))
-                {
-                    return $next($request);
-                }
-                $url = $serviceProxy[array_rand($serviceProxy)]  . $uri;
-                break;
-            case 'service':
-                return $next($request);
-                break;
-            case 'auth':
-                return $next($request);
-                break;
-            default:
-                return abort(404, 'Page Not found');
-                break;
-        }
-        $url .= empty($queryString) ?'':'?' . $queryString;
-
-        $response = Curl::request($url, $method, $data);
-        return $response;
     }
 
     function getRequestServiceProxies(Request $request)
@@ -125,13 +136,6 @@ class GatewayMiddleware
         $method = $request->getMethod();
         $uri = $request->getRequestUri();
         return $this->getServiceRoute($uri, $method);
-
-        /*$gatewayUrl = $gatewayProxies[array_rand($gatewayProxies)]  . $uri;
-        $queryString = $request->getQueryString();
-        $gatewayUrl .= empty($queryString) ?'':'?' . $queryString;
-        $headers = $request->headers->all();
-        $response = Curl::request($gatewayUrl, $method, $data);
-        return Response::make($response);*/
 
     }
 

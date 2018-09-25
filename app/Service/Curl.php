@@ -1,6 +1,8 @@
 <?php
 namespace App\Service;
 
+use Illuminate\Support\Facades\Response;
+
 /**
  * File Curl
  *
@@ -162,7 +164,7 @@ class Curl
         }
     }
 
-    public function request($method, $url, $params = null, array $headers = [])
+    public function request($url, $method, $params = null, array $headers = [])
     {
         $this->init();
         $post = false;
@@ -203,6 +205,7 @@ class Curl
         if (!empty($headers)) {
             curl_setopt($this->handle, CURLOPT_HTTPHEADER, $headers);
         }
+        return $this;
     }
 
     public function exec()
@@ -217,8 +220,8 @@ class Curl
         $url = curl_getinfo($this->handle, CURLINFO_EFFECTIVE_URL);
         $code = curl_getinfo($this->handle, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($this->handle, CURLINFO_HEADER_SIZE);
-        $this->response = Response::make($url, $code, $responseStr, $headerSize, [$errno, $errstr]);
-        return $this->response;
+        list($headers, $body) = $this->parse($responseStr, $headerSize);
+        return response($body, $code, $headers);
     }
     public function setMulti($isMulti)
     {
@@ -241,6 +244,30 @@ class Curl
         }
         return file_put_contents($filename, $this->getResponse()->getBody());
     }
+
+    public function parse($responseStr, $headerSize)
+    {
+        $header = substr($responseStr, 0, $headerSize);
+        $body = substr($responseStr, $headerSize);
+        $lines = explode("\n", $header);
+        array_shift($lines);//Remove status
+        $headers = [];
+        foreach ($lines as $part) {
+            $middle = explode(':', $part);
+            $key = trim($middle[0]);
+            if ($key === '') {
+                continue;
+            }
+            if (isset($headers[$key])) {
+                $headers[$key] = (array)$headers[$key];
+                $headers[$key][] = isset($middle[1]) ? trim($middle[1]) : '';
+            } else {
+                $headers[$key] = isset($middle[1]) ? trim($middle[1]) : '';
+            }
+        }
+        return [$headers, $body];
+    }
+
     public function getResponse()
     {
         return $this->response;

@@ -27,7 +27,6 @@ class HelperMiddleware
      */
     public function handle(Request $request, Closure $next, $id)
     {
-        dd($request->all());
         $request->attachRoute(
             app()->make(RouteRegistry::class)->getRoute($id)
         );

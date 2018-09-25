@@ -9,7 +9,7 @@
 namespace App\Service;
 
 
-class Response
+class ResponseOld
 {
     protected $url;
     protected $httpCode;
@@ -92,5 +92,10 @@ class Response
             list($headers, $body) = static::parse($responseStr, $headerSize);
         }
         return new static($url, $code, $body, $headers, $error);
+    }
+
+    public function send()
+    {
+        return $this->body;
     }
 }

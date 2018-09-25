@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Gateway\Http\Controllers;
+namespace Modules\Gateway\Http\Controllers\Api;
 
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Modules\Gateway\Http\Requests\Request;
 
-class GatewayController extends Controller
+class ApiGatewayController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +14,7 @@ class GatewayController extends Controller
      */
     public function index()
     {
-        return view('gateway::index');
+        return 'API';
     }
 
     /**
